@@ -12,10 +12,10 @@
 loadModule('/TraceCompass/Analysis');
 loadModule('/TraceCompass/View');
 loadModule('/TraceCompass/DataProvider');
-# Modules
 loadModule("/TraceCompass/Trace")
 loadModule("/System/Resources")
 loadModule("/System/Scripting")
+# Load other modules
 import json
 
 # Get the active trace
@@ -25,7 +25,7 @@ if trace is None:
 	exit()
 
 # Create an analysis named userv_msg_seq.py
-analysis = createScriptedAnalysis(getActiveTrace(), "userv_msg_seq_split_j.py")
+analysis = createScriptedAnalysis(getActiveTrace(), "anomaly_detection_visualization_j.py")
 
 # Get the analysis's state system so we can fill it, true indicates to re-use an existing state system, false would create a new state system even if one already exists
 ss = analysis.getStateSystem(False)
@@ -41,20 +41,26 @@ def runAnalysis():
 	mapInitialInfo = java.util.HashMap()
 	iter = getEventIterator(trace)
 	event = None
-	cnt = 0
 	while iter.hasNext():
-		cnt+=1
-		#if cnt>100000:
-		#	print('break')
-		#	break
 		event = iter.next();
+		eventName = event.getName()
+		timestamp = event.getTimestamp().toNanos()/1000
+		cpu = getEventFieldValue(event, "id")
+		tid = getEventFieldValue(event, "tid")
+		pid = getEventFieldValue(event, "pid")
+		channel = getEventFieldValue(event, "channel")
+		args = getEventFieldValue(event, "args")
 		cat = getEventFieldValue(event, "cat")
+		
+		print(eventName, timestamp,cpu, tid, pid, channel, args, cat)
 		if cat=='normal':
 			quark = ss.getQuarkAbsoluteAndAdd(strToVarargs(str('Execution status')))
 			ss.modifyAttribute(event.getTimestamp().toNanos(), 'normal', quark)
-		else:
+		elif cat=='abnormal':
 			quark = ss.getQuarkAbsoluteAndAdd(strToVarargs(str('Execution status')))
 			ss.modifyAttribute(event.getTimestamp().toNanos(), 'abnormal', quark)
+		else:
+			continue
 				
 	
 	# Done parsing the events, close the state system at the time of the last event, it needs to be done manually otherwise the state system will still be waiting for values and will not be considered finished building
