@@ -67,11 +67,25 @@ def runAnalysis():
 	if not(event is None):
 		ss.closeHistory(event.getTimestamp().toNanos())
 	
-			
+class EntryFunction(object):
+    def apply(self, parameters):
+        return tgEntries.getList();
+    
+    class Java:
+        implements = ['java.util.function.Function']
+        
+class ArrowFunction(object):
+    def apply(self, parameters):
+        return tgArrows.getList();
+    
+    class Java:
+        implements = ['java.util.function.Function']			
+
 # This condition verifies if the state system is completed. For instance, if it had been built in a previous run of the script, it wouldn't run again.
 if not(ss.waitUntilBuilt(0)):
     # State system not built, run the analysis
     runAnalysis()
+
   
 # Get a time graph provider from this analysis, displaying all attributes (which are the cpus here)
 provider = createTimeGraphProvider(analysis, {ENTRY_PATH : '*'});
